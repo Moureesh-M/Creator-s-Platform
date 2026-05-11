@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import api from '../services/api'
+import toast from 'react-hot-toast'
 
 const Register = () => {
   // Form field states
@@ -102,19 +104,12 @@ const Register = () => {
       }
 
       // Send POST request to backend
-      const response = await fetch('/api/users/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(registrationData)
-      })
+      const response = await api.post('/api/users/register', registrationData)
 
-      const data = await response.json()
-
-      if (response.ok) {
+      if (response.data.success) {
         // Registration successful
         setSuccessMessage('Account created successfully! Redirecting to login...')
+        toast.success('Account created successfully!')
 
         // Clear form
         setFormData({
@@ -128,14 +123,13 @@ const Register = () => {
         setTimeout(() => {
           navigate('/login')
         }, 2000)
-      } else {
-        // Registration failed - show error from backend
-        setApiError(data.message || 'Registration failed. Please try again.')
       }
     } catch (error) {
       // Network or other error
       console.error('Registration error:', error)
-      setApiError('Unable to connect to server. Please check your connection and try again.')
+      const errorMessage = error.response?.data?.message || 'Unable to connect to server. Please check your connection and try again.'
+      setApiError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       // Stop loading regardless of success/failure
       setIsLoading(false)

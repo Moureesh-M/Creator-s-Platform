@@ -5,6 +5,8 @@ import connectDB from './config/database.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
+import AppError from './utils/AppError.js';
+import errorHandler from './middleware/errorHandler.js';
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +38,19 @@ app.get('/api/health', (req, res) => {
     database: 'Connected'
   });
 });
+
+// Intentional error route for testing error flow
+app.get('/api/error-test', (req, res, next) => {
+  next(new AppError('Intentional test error', 500));
+});
+
+// Handle unmatched routes
+app.use((req, res, next) => {
+  next(new AppError(`Route not found - ${req.originalUrl}`, 404));
+});
+
+// Global error handler
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {

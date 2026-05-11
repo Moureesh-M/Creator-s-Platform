@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
+import toast from 'react-hot-toast';
 
 const EditPost = () => {
   const { id } = useParams();
@@ -29,7 +30,9 @@ const EditPost = () => {
           status: post.status
         });
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load post');
+        const errorMessage = err.response?.data?.message || 'Failed to load post';
+        setError(errorMessage);
+        toast.error(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -55,10 +58,13 @@ const EditPost = () => {
       const response = await api.put(`/api/posts/${id}`, formData);
 
       if (response.data.success) {
+        toast.success('Post updated successfully!');
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update post');
+      const errorMessage = err.response?.data?.message || 'Failed to update post';
+      setError(errorMessage);
+      toast.error(errorMessage);
       setIsSaving(false);
     }
   };

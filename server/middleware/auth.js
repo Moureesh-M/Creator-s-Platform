@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import User from '../models/User.js'
+import AppError from '../utils/AppError.js'
 
 export const protect = async (req, res, next) => {
   try {
@@ -13,10 +14,7 @@ export const protect = async (req, res, next) => {
 
     // Check if token exists
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'Not authorized, no token'
-      })
+      return next(new AppError('Not authorized, no token', 401))
     }
 
     // Verify token
@@ -26,19 +24,13 @@ export const protect = async (req, res, next) => {
     req.user = await User.findById(decoded.userId).select('-password')
 
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'User not found'
-      })
+      return next(new AppError('User not found', 401))
     }
 
     // Continue to next middleware/route
     next()
   } catch (error) {
     console.error('Auth middleware error:', error)
-    return res.status(401).json({
-      success: false,
-      message: 'Not authorized, token failed'
-    })
+    return next(new AppError('Not authorized, token failed', 401))
   }
 }

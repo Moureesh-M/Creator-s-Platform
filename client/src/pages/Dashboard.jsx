@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const { user, logout, loading } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [pagination, setPagination] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -12,27 +14,51 @@ const Dashboard = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!loading && user) {
-      fetchPosts(currentPage);
+    if (loading || !user) {
+      return;
     }
-  }, [currentPage, loading, user]);
 
-  const fetchPosts = async (page) => {
-    setIsLoading(true);
-    setError('');
+    let isMounted = true;
 
-    try {
-      const response = await api.get(`/api/posts?page=${page}&limit=10`);
-      
-      setPosts(response.data.data);
-      setPagination(response.data.pagination);
-    } catch (err) {
-      setError('Failed to load posts');
-      console.error('Fetch posts error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const loadPosts = async () => {
+      setIsLoading(true);
+      setError('');
+
+      try {
+        const response = await api.get(`/api/posts?page=${currentPage}&limit=10`);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setPosts(response.data.data);
+        setPagination(response.data.pagination);
+      } catch (err) {
+        if (!isMounted) {
+          return;
+        }
+
+        const errorMessage = err.response?.data?.message || 'Failed to load posts';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        console.error('Fetch posts error:', err);
+
+        if (err.response?.status === 401) {
+          navigate('/login');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadPosts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentPage, loading, navigate, user]);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -56,9 +82,15 @@ const Dashboard = () => {
           ...currentPagination,
           total: Math.max((currentPagination.total || 1) - 1, 0)
         }));
+        toast.success('Post deleted successfully');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete post');
+      const errorMessage = err.response?.data?.message || 'Failed to delete post';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      if (err.response?.status === 401) {
+        navigate('/login');
+      }
       console.error('Delete post error:', err);
     }
   };
@@ -237,10 +269,6 @@ const postCardStyle = {
   padding: '1.5rem',
   borderBottom: '1px solid #eee',
   transition: 'background-color 0.2s ease',
-};
-
-const postCardStyle_hover = {
-  backgroundColor: '#f9f9f9',
 };
 
 const postHeaderStyle = {

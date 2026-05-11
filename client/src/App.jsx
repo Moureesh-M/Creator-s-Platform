@@ -10,11 +10,13 @@ import CreatePost from './pages/CreatePost'
 import EditPost from './pages/EditPost'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import PublicRoute from './components/common/PublicRoute'
+import { Toaster } from 'react-hot-toast'
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <Toaster position="top-right" />
         <div style={appStyle}>
           <Header />
 

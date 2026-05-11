@@ -45,12 +45,6 @@ api.interceptors.response.use(
       // Clear localStorage
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-
-      // Redirect to login
-      window.location.href = '/login'
-
-      // Show message (optional)
-      console.log('Session expired. Please login again.')
     }
 
     // Return the error for component to handle

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import toast from 'react-hot-toast';
 
 const Login = () => {
   // Form field state
@@ -99,6 +100,7 @@ const Login = () => {
       console.error('Login error:', error);
       const errorMsg = error.response?.data?.message || 'Unable to connect to server. Please try again.';
       setApiError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
