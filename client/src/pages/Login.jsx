@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
@@ -15,6 +15,7 @@ const Login = () => {
   const [apiError, setApiError] = useState('');
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   // Handle input changes
@@ -96,8 +97,9 @@ const Login = () => {
         // Clear form
         setFormData({ email: '', password: '' });
 
-        // Redirect to dashboard
-        navigate('/dashboard');
+        // Redirect to intended page or dashboard
+        const from = location.state?.from?.pathname || '/dashboard';
+        navigate(from, { replace: true });
 
       } else {
         // Login failed

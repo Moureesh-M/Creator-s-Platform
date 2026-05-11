@@ -21,6 +21,18 @@ const Header = () => {
   const linkStyle = { color: 'white', textDecoration: 'none' }
   const navLinkStyle = { color: 'white', textDecoration: 'none', marginLeft: '1rem' }
 
+  // Missing style constants
+  const navStyle = { display: 'flex', alignItems: 'center', gap: '1.5rem' }
+  const userNameStyle = { color: 'white', fontSize: '0.9rem', marginLeft: '0.5rem' }
+  const logoutBtnStyle = {
+    padding: '0.5rem 1rem',
+    backgroundColor: '#dc3545',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer'
+  }
+
   const { user, logout, isAuthenticated } = useAuth()
 
   return (
