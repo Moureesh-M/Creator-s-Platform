@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 const Header = () => {
   const headerStyle = {
@@ -20,6 +21,8 @@ const Header = () => {
   const linkStyle = { color: 'white', textDecoration: 'none' }
   const navLinkStyle = { color: 'white', textDecoration: 'none', marginLeft: '1rem' }
 
+  const { user, logout, isAuthenticated } = useAuth()
+
   return (
     <header style={headerStyle}>
       <div style={containerStyle}>
@@ -29,16 +32,21 @@ const Header = () => {
           </Link>
         </h1>
 
-        <nav>
-          <Link to="/" style={navLinkStyle}>
-            Home
-          </Link>
-          <Link to="/login" style={navLinkStyle}>
-            Login
-          </Link>
-          <Link to="/register" style={navLinkStyle}>
-            Register
-          </Link>
+        <nav style={navStyle}>
+          <Link to="/" style={navLinkStyle}>Home</Link>
+
+          {isAuthenticated() ? (
+            <>
+              <Link to="/dashboard" style={navLinkStyle}>Dashboard</Link>
+              <span style={userNameStyle}>Hi, {user?.name}</span>
+              <button onClick={logout} style={logoutBtnStyle}>Logout</button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" style={navLinkStyle}>Login</Link>
+              <Link to="/register" style={navLinkStyle}>Register</Link>
+            </>
+          )}
         </nav>
       </div>
     </header>

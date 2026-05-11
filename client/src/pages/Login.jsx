@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   // Form field state
@@ -14,6 +15,7 @@ const Login = () => {
   const [apiError, setApiError] = useState('');
 
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   // Handle input changes
   const handleChange = (e) => {
@@ -88,18 +90,13 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Login successful
+        // Login successful - use context to store auth
+        login(data.user, data.token);
 
-        // 1. Store token in localStorage
-        localStorage.setItem('token', data.token);
-
-        // 2. Store user data (optional, for display purposes)
-        localStorage.setItem('user', JSON.stringify(data.user));
-
-        // 3. Clear form
+        // Clear form
         setFormData({ email: '', password: '' });
 
-        // 4. Redirect to dashboard
+        // Redirect to dashboard
         navigate('/dashboard');
 
       } else {
