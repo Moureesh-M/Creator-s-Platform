@@ -50,6 +50,7 @@ const Header = () => {
           {isAuthenticated() ? (
             <>
               <Link to="/dashboard" style={navLinkStyle}>Dashboard</Link>
+              <Link to="/create" style={navLinkStyle}>Create Post</Link>
               <span style={userNameStyle}>Hi, {user?.name}</span>
               <button onClick={logout} style={logoutBtnStyle}>Logout</button>
             </>
