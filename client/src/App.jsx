@@ -67,15 +67,6 @@ function App() {
     </BrowserRouter>
   )
 }
-            </Routes>
-          </main>
-
-          <Footer />
-        </div>
-      </AuthProvider>
-    </BrowserRouter>
-  )
-}
 
 const NotFound = () => (
   <div style={{ textAlign: 'center', padding: '4rem' }}>
