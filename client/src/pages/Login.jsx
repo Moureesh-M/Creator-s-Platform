@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 const Login = () => {
   // Form field state
@@ -76,39 +77,28 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Send login request
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email.trim().toLowerCase(),
-          password: formData.password
-        })
+      // Send login request using api utility
+      const response = await api.post('/api/auth/login', {
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok) {
-        // Login successful - use context to store auth
-        login(data.user, data.token);
+      // Login successful - use context to store auth
+      login(data.user, data.token);
 
-        // Clear form
-        setFormData({ email: '', password: '' });
+      // Clear form
+      setFormData({ email: '', password: '' });
 
-        // Redirect to intended page or dashboard
-        const from = location.state?.from?.pathname || '/dashboard';
-        navigate(from, { replace: true });
-
-      } else {
-        // Login failed
-        setApiError(data.message || 'Login failed. Please try again.');
-      }
+      // Redirect to intended page or dashboard
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
 
     } catch (error) {
       console.error('Login error:', error);
-      setApiError('Unable to connect to server. Please try again.');
+      const errorMsg = error.response?.data?.message || 'Unable to connect to server. Please try again.';
+      setApiError(errorMsg);
     } finally {
       setIsLoading(false);
     }

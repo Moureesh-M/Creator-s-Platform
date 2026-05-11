@@ -56,7 +56,7 @@ export const registerUser = async (req, res) => {
 
 // @desc    Get all users
 // @route   GET /api/users
-// @access  Public (will be protected later with auth)
+// @access  Private (requires authentication)
 export const getAllUsers = async (req, res) => {
   try {
     // Fetch all users, excluding password field
@@ -79,7 +79,7 @@ export const getAllUsers = async (req, res) => {
 
 // @desc    Get single user by ID
 // @route   GET /api/users/:id
-// @access  Public (will be protected later)
+// @access  Private (requires authentication)
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -111,11 +111,19 @@ export const getUserById = async (req, res) => {
 
 // @desc    Update user
 // @route   PUT /api/users/:id
-// @access  Private (will add auth later)
+// @access  Private (requires authentication)
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email } = req.body;
+
+    // Ensure users can only update their own profile
+    if (id !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only update your own profile'
+      });
+    }
 
     // Find user
     const user = await User.findById(id);
@@ -154,10 +162,18 @@ export const updateUser = async (req, res) => {
 
 // @desc    Delete user
 // @route   DELETE /api/users/:id
-// @access  Private (will add auth later)
+// @access  Private (requires authentication)
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Ensure users can only delete their own profile
+    if (id !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only delete your own profile'
+      });
+    }
 
     // Find and delete user
     const user = await User.findByIdAndDelete(id);

@@ -13,7 +13,7 @@ const Dashboard = () => {
     <div style={containerStyle}>
       <div style={headerStyle}>
         <h1>Welcome, {user.name}!</h1>
-        <button onClick={handleLogout} style={logoutButtonStyle}>
+        <button onClick={logout} style={logoutButtonStyle}>
           Logout
         </button>
       </div>
