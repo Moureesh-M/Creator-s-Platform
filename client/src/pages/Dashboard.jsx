@@ -11,14 +11,11 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>;
-
-  if (!user) return <Navigate to="/login" />;
-
-  // Fetch posts when component mounts or page changes
   useEffect(() => {
-    fetchPosts(currentPage);
-  }, [currentPage]);
+    if (!loading && user) {
+      fetchPosts(currentPage);
+    }
+  }, [currentPage, loading, user]);
 
   const fetchPosts = async (page) => {
     setIsLoading(true);
@@ -40,6 +37,35 @@ const Dashboard = () => {
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
+
+  const handleDelete = async (postId) => {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this post? This action cannot be undone.'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const response = await api.delete(`/api/posts/${postId}`);
+
+      if (response.data.success) {
+        setPosts((currentPosts) => currentPosts.filter((post) => post._id !== postId));
+        setPagination((currentPagination) => ({
+          ...currentPagination,
+          total: Math.max((currentPagination.total || 1) - 1, 0)
+        }));
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete post');
+      console.error('Delete post error:', err);
+    }
+  };
+
+  if (loading) return <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>;
+
+  if (!user) return <Navigate to="/login" />;
 
   if (isLoading && posts.length === 0) {
     return <div style={loadingStyle}>Loading posts...</div>;
@@ -94,6 +120,17 @@ const Dashboard = () => {
                   <span style={dateStyle}>
                     {new Date(post.createdAt).toLocaleDateString()}
                   </span>
+                </div>
+                <div style={actionsStyle}>
+                  <Link to={`/edit/${post._id}`} style={editLinkStyle}>
+                    Edit
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(post._id)}
+                    style={deleteButtonStyle}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
@@ -256,6 +293,30 @@ const categoryBadgeStyle = {
 const dateStyle = {
   fontSize: '0.85rem',
   color: '#999',
+};
+
+const actionsStyle = {
+  display: 'flex',
+  gap: '1rem',
+  marginTop: '1rem',
+};
+
+const editLinkStyle = {
+  padding: '0.5rem 1rem',
+  backgroundColor: '#007bff',
+  color: 'white',
+  borderRadius: '5px',
+  textDecoration: 'none',
+  display: 'inline-block',
+};
+
+const deleteButtonStyle = {
+  padding: '0.5rem 1rem',
+  backgroundColor: '#dc3545',
+  color: 'white',
+  border: 'none',
+  borderRadius: '5px',
+  cursor: 'pointer',
 };
 
 const paginationStyle = {

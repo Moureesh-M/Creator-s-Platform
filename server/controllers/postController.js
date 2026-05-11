@@ -126,6 +126,8 @@ export const getPost = async (req, res) => {
   }
 };
 
+export const getPostById = getPost;
+
 // @desc    Update post
 // @route   PUT /api/posts/:id
 // @access  Private
