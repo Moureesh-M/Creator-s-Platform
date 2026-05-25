@@ -45,6 +45,9 @@ api.interceptors.response.use(
       // Clear localStorage
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+
+      // Notify the app so protected routes can redirect immediately
+      window.dispatchEvent(new Event('auth:logout'))
     }
 
     // Return the error for component to handle

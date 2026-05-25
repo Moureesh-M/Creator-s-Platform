@@ -30,6 +30,22 @@ export const AuthProvider = ({ children }) => {
     setLoading(false)
   }, [])
 
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      setUser(null)
+      setToken(null)
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      navigate('/login')
+    }
+
+    window.addEventListener('auth:logout', handleAuthLogout)
+
+    return () => {
+      window.removeEventListener('auth:logout', handleAuthLogout)
+    }
+  }, [navigate])
+
   // Login function
   const login = (userData, userToken) => {
     setUser(userData)

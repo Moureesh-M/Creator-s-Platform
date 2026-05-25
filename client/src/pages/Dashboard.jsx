@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import socket from '../services/socket';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {
-  const { user, logout, loading } = useAuth();
+  const { user, token, logout, loading } = useAuth();
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [pagination, setPagination] = useState({});
@@ -14,7 +15,45 @@ const Dashboard = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (loading || !user) {
+    if (loading || !user || !token) {
+      return;
+    }
+
+    console.log('Dashboard route mounted');
+
+    const handleConnect = () => {
+      console.log(`Socket connected: ${socket.id}`);
+    };
+
+    const handleDisconnect = (reason) => {
+      console.log(`Socket disconnected: ${reason}`);
+    };
+
+    const handleConnectError = (error) => {
+      console.error('Socket connection error:', error.message);
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('connect_error', handleConnectError);
+
+    if (!socket.connected) {
+      socket.connect();
+    } else {
+      handleConnect();
+    }
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('connect_error', handleConnectError);
+      socket.off();
+      socket.disconnect();
+    };
+  }, [loading, token, user]);
+
+  useEffect(() => {
+    if (loading || !user || !token) {
       return;
     }
 
@@ -58,7 +97,7 @@ const Dashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, [currentPage, loading, navigate, user]);
+  }, [currentPage, loading, navigate, token, user]);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
