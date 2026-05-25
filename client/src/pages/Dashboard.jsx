@@ -33,9 +33,14 @@ const Dashboard = () => {
       console.error('Socket connection error:', error.message);
     };
 
+    const handleNewPost = (data) => {
+      toast.success(data.message);
+    };
+
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('connect_error', handleConnectError);
+    socket.on('newPost', handleNewPost);
 
     if (!socket.connected) {
       socket.connect();
@@ -47,6 +52,7 @@ const Dashboard = () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off('connect_error', handleConnectError);
+      socket.off('newPost', handleNewPost);
       socket.off();
       socket.disconnect();
     };
