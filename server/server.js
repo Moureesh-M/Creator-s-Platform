@@ -10,6 +10,8 @@ import errorHandler from './middleware/errorHandler.js';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import uploadRoutes from "./routes/upload.js";
+
 
 // Load environment variables
 dotenv.config();
@@ -90,6 +92,8 @@ app.use(express.json());
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes(io));
+app.use("/api/upload", uploadRoutes);
+
 
 // Health check endpoint (keep this for testing)
 app.get('/api/health', (req, res) => {

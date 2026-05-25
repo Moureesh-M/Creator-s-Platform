@@ -34,3 +34,5 @@ export const protect = async (req, res, next) => {
     return next(new AppError('Not authorized, token failed', 401))
   }
 }
+
+export default protect;
