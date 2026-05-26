@@ -22,6 +22,23 @@ export const createPost = async (req, res, next) => {
       author: req.user._id // From protect middleware
     });
 
+    // Emit socket event to all connected clients (if io is available)
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('newPost', {
+          message: `New post created by ${req.user.name}`,
+          post: {
+            _id: post._id,
+            title: post.title,
+            createdBy: req.user.name
+          }
+        });
+      }
+    } catch (emitErr) {
+      console.error('Emit newPost error:', emitErr);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Post created successfully',
