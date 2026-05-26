@@ -4,6 +4,7 @@ const ImageUpload = ({ onUpload }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [error, setError] = useState('');
+  const [isRotating, setIsRotating] = useState(false);
 
   const validateFile = (file) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -43,6 +44,31 @@ const ImageUpload = ({ onUpload }) => {
 
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
+  };
+
+  const rotateSelectedImage = async (direction = 'right') => {
+    if (!selectedFile) {
+      setError('Please select an image first');
+      return;
+    }
+
+    setIsRotating(true);
+    setError('');
+
+    try {
+      const rotatedFile = await rotateFile(selectedFile, direction);
+
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+
+      setSelectedFile(rotatedFile);
+      setPreviewUrl(URL.createObjectURL(rotatedFile));
+    } catch (rotationError) {
+      setError(rotationError.message || 'Could not rotate image');
+    } finally {
+      setIsRotating(false);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -92,14 +118,87 @@ const ImageUpload = ({ onUpload }) => {
             alt="Selected file preview"
             style={previewImageStyle}
           />
+          <div style={rotateButtonRowStyle}>
+            <button
+              type="button"
+              onClick={() => rotateSelectedImage('left')}
+              disabled={isRotating}
+              style={secondaryButtonStyle}
+            >
+              Rotate left
+            </button>
+            <button
+              type="button"
+              onClick={() => rotateSelectedImage('right')}
+              disabled={isRotating}
+              style={secondaryButtonStyle}
+            >
+              Rotate right
+            </button>
+          </div>
         </div>
       )}
 
-      <button type="submit" disabled={!selectedFile || !!error} style={buttonStyle}>
-        Upload Image
+      <button type="submit" disabled={!selectedFile || !!error || isRotating} style={buttonStyle}>
+        {isRotating ? 'Rotating...' : 'Upload Image'}
       </button>
     </form>
   );
+};
+
+const rotateFile = (file, direction) => {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+
+      if (!context) {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Could not process image'));
+        return;
+      }
+
+      const isQuarterTurn = direction === 'left' || direction === 'right';
+      canvas.width = isQuarterTurn ? image.height : image.width;
+      canvas.height = isQuarterTurn ? image.width : image.height;
+
+      context.translate(canvas.width / 2, canvas.height / 2);
+
+      if (direction === 'left') {
+        context.rotate((-90 * Math.PI) / 180);
+      } else {
+        context.rotate((90 * Math.PI) / 180);
+      }
+
+      context.drawImage(image, -image.width / 2, -image.height / 2);
+
+      const outputType = file.type || 'image/jpeg';
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(objectUrl);
+
+          if (!blob) {
+            reject(new Error('Could not rotate image'));
+            return;
+          }
+
+          resolve(new File([blob], file.name, { type: blob.type || outputType }));
+        },
+        outputType,
+        0.92
+      );
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Could not load image'));
+    };
+
+    image.src = objectUrl;
+  });
 };
 
 const formStyle = {
@@ -136,6 +235,12 @@ const previewContainerStyle = {
   gap: '0.5rem',
 };
 
+const rotateButtonRowStyle = {
+  display: 'flex',
+  gap: '0.75rem',
+  flexWrap: 'wrap',
+};
+
 const previewLabelStyle = {
   margin: 0,
   color: '#374151',
@@ -161,6 +266,12 @@ const buttonStyle = {
   fontSize: '1rem',
   fontWeight: 600,
   cursor: 'pointer',
+};
+
+const secondaryButtonStyle = {
+  ...buttonStyle,
+  backgroundColor: '#374151',
+  fontSize: '0.95rem',
 };
 
 export default ImageUpload;

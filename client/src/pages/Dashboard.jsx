@@ -182,6 +182,21 @@ const Dashboard = () => {
           <>
             {posts.map((post) => (
               <div key={post._id} style={postCardStyle}>
+                {post.coverImage && (
+                  <img
+                    src={post.coverImage}
+                    alt={`Cover image for ${post.title}`}
+                    style={{
+                      width: '100%',
+                      maxWidth: '320px',
+                      height: 'auto',
+                      objectFit: 'contain',
+                      display: 'block',
+                      marginBottom: '1rem',
+                      borderRadius: '8px'
+                    }}
+                  />
+                )}
                 <div style={postHeaderStyle}>
                   <h3 style={postTitleStyle}>{post.title}</h3>
                   <div style={statusBadgeStyle(post.status)}>

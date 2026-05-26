@@ -12,6 +12,9 @@ const CreatePost = () => {
     status: 'draft'
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [coverImageUrl, setCoverImageUrl] = useState(null);
+  const [uploadError, setUploadError] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
@@ -27,36 +30,54 @@ const CreatePost = () => {
   };
 
   const handleUpload = (uploadFormData) => {
-    console.log('FormData ready:', uploadFormData.get('image'));
+    setUploading(true);
+    setUploadError('');
+
+    api.post('/api/upload', uploadFormData)
+      .then((response) => {
+        // TODO: If the user uploads a replacement image, the previous Cloudinary asset remains orphaned.
+        // We would need to store and delete the old public_id to clean it up.
+        setCoverImageUrl(response.data.url);
+        toast.success('Image uploaded successfully!');
+      })
+      .catch((err) => {
+        const message = err.response?.data?.message || 'Image upload failed';
+        setUploadError(message);
+        toast.error(message);
+      })
+      .finally(() => {
+        setUploading(false);
+      });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (!formData.title.trim() || !formData.content.trim()) {
+      toast.error('Title and content are required');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Validate fields
-      if (!formData.title.trim()) {
-        setError('Title is required');
-        setIsLoading(false);
-        return;
-      }
-
-      if (!formData.content.trim()) {
-        setError('Content is required');
-        setIsLoading(false);
-        return;
-      }
-
       if (formData.content.trim().length < 10) {
         setError('Content must be at least 10 characters');
         setIsLoading(false);
         return;
       }
 
-      const response = await api.post('/api/posts', formData);
+      const postData = {
+        title: formData.title,
+        content: formData.content,
+        category: formData.category,
+        status: formData.status,
+        coverImage: coverImageUrl
+      };
+
+      const response = await api.post('/api/posts', postData);
       
       if (response.data.success) {
         setSuccess('Post created successfully!');
@@ -69,6 +90,8 @@ const CreatePost = () => {
           category: 'Other',
           status: 'draft'
         });
+        setCoverImageUrl(null);
+        setUploadError('');
 
         // Redirect to dashboard after 1 second
         setTimeout(() => {
@@ -92,6 +115,8 @@ const CreatePost = () => {
         
         {error && <div style={errorStyle}>{error}</div>}
         {success && <div style={successStyle}>{success}</div>}
+        {uploading && <p style={uploadingStyle}>Uploading image, please wait...</p>}
+        {uploadError && <p style={uploadErrorStyle}>{uploadError}</p>}
 
         <div style={{ marginBottom: '1.5rem' }}>
           <ImageUpload onUpload={handleUpload} />
@@ -162,14 +187,14 @@ const CreatePost = () => {
 
           <button 
             type="submit" 
-            disabled={isLoading}
+            disabled={isLoading || uploading}
             style={{
               ...buttonStyle,
-              opacity: isLoading ? 0.6 : 1,
-              cursor: isLoading ? 'not-allowed' : 'pointer'
+              opacity: isLoading || uploading ? 0.6 : 1,
+              cursor: isLoading || uploading ? 'not-allowed' : 'pointer'
             }}
           >
-            {isLoading ? 'Creating...' : 'Create Post'}
+            {uploading ? 'Uploading...' : isLoading ? 'Creating...' : 'Create Post'}
           </button>
         </form>
       </div>
@@ -267,6 +292,21 @@ const successStyle = {
   backgroundColor: '#d4edda',
   color: '#155724',
   border: '1px solid #c3e6cb',
+  borderRadius: '5px',
+  marginBottom: '1rem',
+};
+
+const uploadingStyle = {
+  marginBottom: '1rem',
+  color: '#1d4ed8',
+  fontWeight: '600',
+};
+
+const uploadErrorStyle = {
+  padding: '1rem',
+  backgroundColor: '#fef2f2',
+  color: '#b91c1c',
+  border: '1px solid #fecaca',
   borderRadius: '5px',
   marginBottom: '1rem',
 };

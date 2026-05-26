@@ -6,7 +6,7 @@ import AppError from '../utils/AppError.js';
 // @access  Private
 export const createPost = async (req, res, next) => {
   try {
-    const { title, content, category, status } = req.body;
+    const { title, content, category, status, coverImage } = req.body;
 
     // Validate required fields
     if (!title || !content) {
@@ -17,6 +17,7 @@ export const createPost = async (req, res, next) => {
     const post = await Post.create({
       title,
       content,
+      coverImage: coverImage || null,
       category,
       status,
       author: req.user._id // From protect middleware
