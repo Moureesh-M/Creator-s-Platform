@@ -23,6 +23,8 @@ export const createPost = async (req, res, next) => {
       author: req.user._id // From protect middleware
     });
 
+    await post.populate('author', 'name email avatar');
+
     // Emit socket event to all connected clients (if io is available)
     try {
       const io = req.app.get('io');
@@ -64,15 +66,17 @@ export const getPosts = async (req, res, next) => {
     // Calculate skip value
     const skip = (page - 1) * limit;
 
-    // Get posts for logged-in user only
-    const posts = await Post.find({ author: req.user._id })
-      .sort({ createdAt: -1 }) // Newest first
-      .skip(skip)
-      .limit(limit)
-      .populate('author', 'name email'); // Include author info
-
-    // Get total count for pagination
-    const total = await Post.countDocuments({ author: req.user._id });
+    // Get posts and count in parallel for faster pagination
+    const [posts, total] = await Promise.all([
+      Post.find({ author: req.user._id })
+        .select('title content author createdAt coverImage')
+        .sort({ createdAt: -1 }) // Newest first
+        .skip(skip)
+        .limit(limit)
+        .populate('author', 'name email avatar')
+        .lean(), // Include author info
+      Post.countDocuments({ author: req.user._id })
+    ]);
 
     // Calculate total pages
     const totalPages = Math.ceil(total / limit);
@@ -102,7 +106,8 @@ export const getPosts = async (req, res, next) => {
 export const getPost = async (req, res, next) => {
   try {
     const post = await Post.findById(req.params.id)
-      .populate('author', 'name email');
+      .populate('author', 'name email avatar')
+      .lean();
 
     if (!post) {
       return next(new AppError('Post not found', 404));
@@ -150,6 +155,8 @@ export const updatePost = async (req, res, next) => {
     if (status) post.status = status;
 
     post = await post.save();
+
+    await post.populate('author', 'name email avatar');
 
     res.status(200).json({
       success: true,
