@@ -8,13 +8,17 @@ import {
   deletePost
 } from '../controllers/postController.js';
 
-const router = express.Router();
+const postRoutes = (io) => {
+  const router = express.Router();
 
-// All routes require authentication
-router.post('/', protect, createPost);
-router.get('/', protect, getPosts);
-router.get('/:id', protect, getPostById);
-router.put('/:id', protect, updatePost);
-router.delete('/:id', protect, deletePost);
+  // All routes require authentication
+  router.post('/', protect, createPost);
+  router.get('/', protect, getPosts);
+  router.get('/:id', protect, getPostById);
+  router.put('/:id', protect, updatePost);
+  router.delete('/:id', protect, deletePost);
 
-export default router;
+  return router;
+};
+
+export default postRoutes;
