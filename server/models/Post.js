@@ -10,13 +10,21 @@ const postSchema = new mongoose.Schema(
     },
     content: {
       type: String,
-      required: [true, 'Content is required'],
       minlength: [10, 'Content must be at least 10 characters']
     },
+    coverImage: {
+      type: String,
+      default: null
+    },
+    likes: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
+      index: true
     },
     category: {
       type: String,
@@ -29,10 +37,26 @@ const postSchema = new mongoose.Schema(
       default: 'draft'
     }
   },
-  { 
-    timestamps: true // Adds createdAt and updatedAt
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
+
+postSchema.virtual('image')
+  .get(function getImage() {
+    return this.coverImage;
+  })
+  .set(function setImage(value) {
+    this.coverImage = value;
+  });
+
+// Compound index: filter + sort
+postSchema.index({ author: 1, createdAt: -1 });
+
+// Index for global feed sorting
+postSchema.index({ createdAt: -1 });
 
 const Post = mongoose.model('Post', postSchema);
 
