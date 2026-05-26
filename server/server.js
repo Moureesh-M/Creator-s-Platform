@@ -7,8 +7,12 @@ import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import AppError from './utils/AppError.js';
 import errorHandler from './middleware/errorHandler.js';
+import timingMiddleware from './middleware/timing.js';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
+import uploadRoutes from "./routes/upload.js";
+
 
 // Load environment variables
 dotenv.config();
@@ -47,8 +51,24 @@ const io = new Server(httpServer, {
   },
 });
 
+// Expose io via express app for controllers/middleware
+app.set('io', io);
+
+// Socket.io middleware to verify JWT from client
+io.use((socket, next) => {
+  const token = socket.handshake?.auth?.token;
+  if (!token) return next(new Error('No token'));
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return next(new Error('Authentication error'));
+    socket.data.user = decoded;
+    next();
+  });
+});
+
 io.on('connection', (socket) => {
-  console.log(`✅ User connected: ${socket.id}`);
+  const userEmail = socket.data?.user?.email || 'unknown';
+  console.log(`✅ User connected: ${socket.id} | User: ${userEmail}`);
 
   socket.on('disconnect', (reason) => {
     console.log(`❌ User disconnected: ${socket.id} (${reason})`);
@@ -68,11 +88,14 @@ app.use(cors({
   optionsSuccessStatus: 200,
 }));
 app.use(express.json());
+app.use(timingMiddleware);
 
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/posts', postRoutes);
+app.use('/api/posts', postRoutes(io));
+app.use("/api/upload", uploadRoutes);
+
 
 // Health check endpoint (keep this for testing)
 app.get('/api/health', (req, res) => {
