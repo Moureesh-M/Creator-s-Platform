@@ -11,3 +11,5 @@ const socket = io(SOCKET_URL, {
     token: localStorage.getItem('token')
   }
 });
+
+export default socket;

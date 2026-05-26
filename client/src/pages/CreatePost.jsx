@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import ImageUpload from '../components/ImageUpload';
 
 const CreatePost = () => {
   const [formData, setFormData] = useState({
@@ -23,6 +24,10 @@ const CreatePost = () => {
       [name]: value
     });
     setError('');
+  };
+
+  const handleUpload = (uploadFormData) => {
+    console.log('FormData ready:', uploadFormData.get('image'));
   };
 
   const handleSubmit = async (e) => {
@@ -87,6 +92,10 @@ const CreatePost = () => {
         
         {error && <div style={errorStyle}>{error}</div>}
         {success && <div style={successStyle}>{success}</div>}
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <ImageUpload onUpload={handleUpload} />
+        </div>
 
         <form onSubmit={handleSubmit} style={formStyle}>
           {/* Title */}
