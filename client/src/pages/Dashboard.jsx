@@ -33,9 +33,14 @@ const Dashboard = () => {
       console.error('Socket connection error:', error.message);
     };
 
+    const handleNewPost = (data) => {
+      toast.success(data.message);
+    };
+
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('connect_error', handleConnectError);
+    socket.on('newPost', handleNewPost);
 
     if (!socket.connected) {
       socket.connect();
@@ -47,6 +52,7 @@ const Dashboard = () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off('connect_error', handleConnectError);
+      socket.off('newPost', handleNewPost);
       socket.off();
       socket.disconnect();
     };
@@ -176,6 +182,21 @@ const Dashboard = () => {
           <>
             {posts.map((post) => (
               <div key={post._id} style={postCardStyle}>
+                {post.coverImage && (
+                  <img
+                    src={post.coverImage}
+                    alt={`Cover image for ${post.title}`}
+                    style={{
+                      width: '100%',
+                      maxWidth: '320px',
+                      height: 'auto',
+                      objectFit: 'contain',
+                      display: 'block',
+                      marginBottom: '1rem',
+                      borderRadius: '8px'
+                    }}
+                  />
+                )}
                 <div style={postHeaderStyle}>
                   <h3 style={postTitleStyle}>{post.title}</h3>
                   <div style={statusBadgeStyle(post.status)}>
