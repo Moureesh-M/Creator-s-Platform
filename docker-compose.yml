@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mongo:
     image: mongo:latest
@@ -19,12 +17,13 @@ services:
     container_name: creator-platform-server
     ports:
       - "5000:5000"
-    environment:
-      MONGODB_URI: mongodb://admin:password123@mongo:27017/creator-platform?authSource=admin
-      JWT_SECRET: ${JWT_SECRET}
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    # Use env_file to keep secrets out of this Compose file. We keep a local
+    # `server/.env` for developer secrets and `server/.env.docker` for
+    # Docker-specific overrides (e.g. MONGODB_URI that points to the Compose
+    # service hostname `mongo`). `.env.docker` overrides values from `.env`.
+    env_file:
+      - ./server/.env
+      - ./server/.env.docker
     depends_on:
       - mongo
 

@@ -1,6 +1,6 @@
-# Use official Node.js 18 image on Alpine Linux
+# Use a modern Node.js runtime on Alpine Linux
 # Alpine = small, secure, production-ready
-FROM node:18-alpine
+FROM node:22-alpine
 
 # Set working directory inside container
 # All subsequent commands run from /app
