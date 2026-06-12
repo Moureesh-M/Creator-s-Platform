@@ -1,0 +1,267 @@
+{
+  "info": {
+    "name": "Creators Platform API",
+    "description": "Health, auth, and authenticated posts requests for Creators Platform.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseURL}}/api/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has health fields', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('message');",
+                  "  pm.expect(json).to.have.property('timestamp');",
+                  "  pm.expect(json).to.have.property('database');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = Date.now();",
+                  "pm.environment.set('userName', `Postman User ${id}`);",
+                  "pm.environment.set('userEmail', `postman.${id}@example.com`);",
+                  "pm.environment.set('userPassword', 'Password123!');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Register response has success and data', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json).to.have.property('data');",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (json.token) pm.environment.set('authToken', json.token);",
+                  "if (json.data?.token) pm.environment.set('authToken', json.data.token);",
+                  "if (json.data?._id) pm.environment.set('userId', json.data._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{userName}}\",\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}"
+            },
+            "url": "{{baseURL}}/api/users/register"
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Login response has token and user', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json).to.have.property('token');",
+                  "  pm.expect(json).to.have.property('user');",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('authToken', json.token);",
+                  "if (json.user?.id) pm.environment.set('userId', json.user.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}"
+            },
+            "url": "{{baseURL}}/api/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "Get All Posts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseURL}}/api/posts?page=1&limit=10"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Posts response has data and pagination', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "  pm.expect(json).to.have.property('pagination');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Test Post\",\n  \"content\": \"This post was created from Postman.\",\n  \"category\": \"Technology\",\n  \"status\": \"draft\"\n}"
+            },
+            "url": "{{baseURL}}/api/posts"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Create response has post id', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('_id');",
+                  "});",
+                  "pm.environment.set('postId', pm.response.json().data._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Post",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Postman Test Post\",\n  \"content\": \"This post was updated from Postman.\",\n  \"category\": \"Other\",\n  \"status\": \"published\"\n}"
+            },
+            "url": "{{baseURL}}/api/posts/{{postId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Update response has success flag', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json).to.have.property('data');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseURL}}/api/posts/{{postId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Delete response has success flag', () => {",
+                  "  pm.expect(pm.response.json()).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
