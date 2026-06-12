@@ -5,8 +5,11 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_U
 
 // Create socket instance (not connected yet)
 const socket = io(SOCKET_URL, {
-  autoConnect: false,   // Don't connect automatically
-  withCredentials: true
+  autoConnect: false,
+  withCredentials: true,
+  auth: {
+    token: localStorage.getItem('token')
+  }
 });
 
 export default socket;

@@ -1,0 +1,41 @@
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: creator-platform-server
+    ports:
+      - "5000:5000"
+    # Use env_file to keep secrets out of this Compose file. We keep a local
+    # `server/.env` for developer secrets and `server/.env.docker` for
+    # Docker-specific overrides (e.g. MONGODB_URI that points to the Compose
+    # service hostname `mongo`). `.env.docker` overrides values from `.env`.
+    env_file:
+      - ./server/.env
+      - ./server/.env.docker
+    depends_on:
+      - mongo
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: creator-platform-client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+
+volumes:
+  mongo-data:
